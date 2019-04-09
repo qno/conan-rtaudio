@@ -1,2 +1,5 @@
 # conan-rtaudio
-A conan recipe for RtMidi.
+A [conan](https://conan.io/) recipe for [RtAudio](https://github.com/thestk/rtaudio).
+***
+
+***
