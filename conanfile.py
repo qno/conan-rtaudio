@@ -30,6 +30,11 @@ class RtAudioConan(ConanFile):
         if self._isVisualStudioBuild():
             cmake = CMake(self)
             cmake.definitions["RTAUDIO_BUILD_TESTING"] = "False"
+            if self.options.shared:
+                cmake.definitions["RTAUDIO_BUILD_STATIC_LIBS"] = "False"
+            else:
+                cmake.definitions["RTAUDIO_BUILD_SHARED_LIBS"] = "False"
+
             cmake.configure(source_dir=self._rtaudio_pkg_name)
             cmake.build()
         else:
@@ -52,8 +57,11 @@ class RtAudioConan(ConanFile):
         debug_libs = [self._rtaudio_libname]
 
         if self._isVisualStudioBuild():
-            release_libs.append("{}_static".format(self._rtaudio_libname))
-            debug_libs = ["{}d".format(self._rtaudio_libname), "{}_staticd".format(self._rtaudio_libname)]
+            if not self.options.shared:
+               release_libs = ["{}_static".format(self._rtaudio_libname)]
+               debug_libs = ["{}_staticd".format(self._rtaudio_libname)]
+            else:
+                debug_libs = ["{}d".format(self._rtaudio_libname)]
 
         self.cpp_info.release.libs = release_libs
         self.cpp_info.debug.libs = debug_libs
