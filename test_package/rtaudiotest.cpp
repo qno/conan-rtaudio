@@ -1,6 +1,10 @@
 #include <RtAudio.h>
 
+#include <iostream>
+
 int main() {
+
+   std::cout << "test start ..." << std::endl;
 
    try
    {
@@ -10,5 +14,6 @@ int main() {
       error.printMessage();
    }
 
+   std::cout << "test end ..." << std::endl;
    return 0;
 }
