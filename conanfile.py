@@ -48,11 +48,15 @@ class RtAudioConan(ConanFile):
         self.copy("*.a", dst="lib", keep_path=False)
 
     def package_info(self):
-        libs = [self._rtaudio_libname]
-        if self._isVisualStudioBuild():
-            libs.append("{}_static".format(self._rtaudio_libname))
+        release_libs = [self._rtaudio_libname]
+        debug_libs = [self._rtaudio_libname]
 
-        self.cpp_info.libs = libs
+        if self._isVisualStudioBuild():
+            release_libs.append("{}_static".format(self._rtaudio_libname))
+            debug_libs = ["{}d".format(self._rtaudio_libname), "{}_staticd".format(self._rtaudio_libname)]
+
+        self.cpp_info.release.libs = release_libs
+        self.cpp_info.debug.libs = debug_libs
 
     def _isVisualStudioBuild(self):
         return self.settings.os == "Windows" and self.settings.compiler == "Visual Studio"
