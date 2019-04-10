@@ -29,7 +29,7 @@ class RtAudioConan(ConanFile):
     def build(self):
         if self._isVisualStudioBuild():
             cmake = CMake(self)
-            cmake.definitions["BUILD_TESTING"] = "False"
+            cmake.definitions["RTAUDIO_BUILD_TESTING"] = "False"
             cmake.configure(source_dir=self._rtaudio_pkg_name)
             cmake.build()
         else:
