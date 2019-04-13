@@ -35,6 +35,9 @@ class RtAudioConan(ConanFile):
         if self._isVisualStudioBuild():
             cmake = CMake(self)
             cmake.definitions["RTAUDIO_BUILD_TESTING"] = "False"
+            cmake.definitions["RTAUDIO_API_DS"] = "On"
+            cmake.definitions["RTAUDIO_API_ASIO"] = "On"
+            cmake.definitions["RTAUDIO_API_WASAPI"] = "On"
             if self.options.shared:
                 cmake.definitions["RTAUDIO_BUILD_STATIC_LIBS"] = "False"
             else:
