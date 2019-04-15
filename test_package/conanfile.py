@@ -30,4 +30,3 @@ class RtAudioTestConan(ConanFile):
                 else:
                     self.output.error("Exception is unexpected on this platform")
                     raise e
-
