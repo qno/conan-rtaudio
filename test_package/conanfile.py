@@ -2,11 +2,6 @@ import os
 
 from conans import ConanFile, CMake, tools
 
-from ftplib import FTP
-import fileinput
-import platform
-import uuid
-
 class RtAudioTestConan(ConanFile):
     settings = "os", "compiler", "build_type", "arch"
     generators = "cmake"
