@@ -4,6 +4,8 @@
 
 int main() {
 
+   std::cout << "test start ..." << std::endl;
+
    try
    {
       RtAudio rtAudio;
@@ -11,6 +13,8 @@ int main() {
    {
       error.printMessage();
    }
+
+   std::cout << "test end ..." << std::endl;
 
    return 0;
 }
