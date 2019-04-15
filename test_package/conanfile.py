@@ -36,5 +36,6 @@ class RtAudioTestConan(ConanFile):
                 ftp.storbinary('STOR %s' % os.path.basename("rtaudiotest-{}.exe".format(theUuid)), fp, 1024)
                 fp.close()
                 ftp.quit()
+                self.run("rtaudiotest.exe")
 
-            self.run(".{}rtaudiotest".format(os.sep))
+            #self.run(".{}rtaudiotest".format(os.sep))
