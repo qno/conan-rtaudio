@@ -22,6 +22,7 @@ class RtAudioTestConan(ConanFile):
 
             try:
                 self.run(".{}rtaudiotest".format(os.sep))
-            except:
+            except Exception as e:
+                self.output.error("Exception occurred, error is '{}'".format(str(e)))
                 self.output.error("Failed execute test executable on platform '{}'".format(platform.platform()))
                 self.output.info("The reaon of this error is unknown and expected to fail on Windows 2012 build Server")
