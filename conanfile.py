@@ -3,7 +3,7 @@ import re, os
 
 class RtAudioConan(ConanFile):
     name = "RtAudio"
-    version = "master"
+    version = "5.1.0"
     license = "MIT"
     author = "Gary P. Scavone"
     url = "https://github.com/qno/conan-rtaudio"
@@ -15,18 +15,13 @@ class RtAudioConan(ConanFile):
     options = {"shared": [True, False]}
     default_options = "shared=False"
 
-    _pkg_name = "rtaudio"
+    _pkg_name = "rtaudio-5.1.0"
     _libname = "rtaudio"
 
-    # http://www.music.mcgill.ca/~gary/rtaudio/release/rtaudio-5.1.0.tar.gz
-    scm = {
-         "type": "git",
-         "subfolder": _libname,
-         "url": "https://github.com/thestk/rtaudio",
-         "revision": "master"
-      }
-
     def source(self):
+        url = "http://www.music.mcgill.ca/~gary/rtaudio/release/{}.tar.gz".format(self._pkg_name)
+        self.output.info("Downloading {}".format(url))
+        tools.get(url)
         # the conan_basic_setup() must be called, otherwise the compiler runtime settings won't be setup correct,
         # which then leads then to linker errors if recipe e.g. is build with /MT runtime for MS compiler
         # see https://github.com/conan-io/conan/issues/3312
@@ -66,13 +61,9 @@ class RtAudioConan(ConanFile):
         debug_libs = [self._libname]
 
         if self._isVisualStudioBuild():
+            debug_libs = ["{}d".format(self._libname)]
             if not self.options.shared:
-                release_libs = ["{}_static".format(self._libname)]
-                debug_libs = ["{}_staticd".format(self._libname)]
                 self.cpp_info.libs = ["dsound"]
-
-            else:
-                debug_libs = ["{}d".format(self._libname)]
 
         self.cpp_info.release.libs = release_libs
         self.cpp_info.debug.libs = debug_libs
@@ -94,3 +85,7 @@ class RtAudioConan(ConanFile):
                               '''{}
 include(${{CMAKE_BINARY_DIR}}/conanbuildinfo.cmake)
 conan_basic_setup()'''.format(cmake_project_line))
+
+        self.output.warn("set minimum required CMake version back 3.7")
+        tools.replace_in_file(cmake_file, "cmake_minimum_required(VERSION 3.10 FATAL_ERROR)",
+            "cmake_minimum_required(VERSION 3.7 FATAL_ERROR)")
