@@ -15,12 +15,13 @@ class RtAudioConan(ConanFile):
     options = {"shared": [True, False]}
     default_options = "shared=False"
 
-    _rtaudio_pkg_name = "rtaudio"
-    _rtaudio_libname = "rtaudio"
+    _pkg_name = "rtaudio"
+    _libname = "rtaudio"
 
+    # http://www.music.mcgill.ca/~gary/rtaudio/release/rtaudio-5.1.0.tar.gz
     scm = {
          "type": "git",
-         "subfolder": _rtaudio_libname,
+         "subfolder": _libname,
          "url": "https://github.com/thestk/rtaudio",
          "revision": "master"
       }
@@ -29,7 +30,7 @@ class RtAudioConan(ConanFile):
         # the conan_basic_setup() must be called, otherwise the compiler runtime settings won't be setup correct,
         # which then leads then to linker errors if recipe e.g. is build with /MT runtime for MS compiler
         # see https://github.com/conan-io/conan/issues/3312
-        self._patchCMakeListsFile(self._rtaudio_pkg_name)
+        self._patchCMakeListsFile(self._pkg_name)
 
     def build(self):
         if self._isVisualStudioBuild():
@@ -43,17 +44,17 @@ class RtAudioConan(ConanFile):
             else:
                 cmake.definitions["RTAUDIO_BUILD_SHARED_LIBS"] = "False"
 
-            cmake.configure(source_dir=self._rtaudio_pkg_name)
+            cmake.configure(source_dir=self._pkg_name)
             cmake.build()
         else:
-            self.run("cd {} && sh autogen.sh --no-configure && cd ..".format(self._rtaudio_pkg_name))
+            self.run("cd {} && sh autogen.sh --no-configure && cd ..".format(self._pkg_name))
             autotools = AutoToolsBuildEnvironment(self)
-            autotools.configure(configure_dir=self._rtaudio_pkg_name)
+            autotools.configure(configure_dir=self._pkg_name)
             autotools.make()
             autotools.install()
 
     def package(self):
-        self.copy("RtAudio.h", dst="include", src=self._rtaudio_pkg_name)
+        self.copy("RtAudio.h", dst="include", src=self._pkg_name)
         self.copy("*.lib", dst="lib", keep_path=False)
         self.copy("*.dll", dst="lib", keep_path=False)
         self.copy("*.so", dst="lib", keep_path=False)
@@ -61,17 +62,17 @@ class RtAudioConan(ConanFile):
         self.copy("*.a", dst="lib", keep_path=False)
 
     def package_info(self):
-        release_libs = [self._rtaudio_libname]
-        debug_libs = [self._rtaudio_libname]
+        release_libs = [self._libname]
+        debug_libs = [self._libname]
 
         if self._isVisualStudioBuild():
             if not self.options.shared:
-                release_libs = ["{}_static".format(self._rtaudio_libname)]
-                debug_libs = ["{}_staticd".format(self._rtaudio_libname)]
+                release_libs = ["{}_static".format(self._libname)]
+                debug_libs = ["{}_staticd".format(self._libname)]
                 self.cpp_info.libs = ["dsound"]
 
             else:
-                debug_libs = ["{}d".format(self._rtaudio_libname)]
+                debug_libs = ["{}d".format(self._libname)]
 
         self.cpp_info.release.libs = release_libs
         self.cpp_info.debug.libs = debug_libs
