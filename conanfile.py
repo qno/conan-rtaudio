@@ -77,7 +77,7 @@ class RtAudioConan(ConanFile):
         for line in open(cmake_file, "r", encoding="utf8"):
             if re.match("^PROJECT.*\\(.*\\).*", line.strip().upper()):
                 cmake_project_line = line.strip()
-                self.output.warn(F"found cmake project declaration '{cmake_project_line}'")
+                self.output.warn("found cmake project declaration '{}'".format(cmake_project_line))
                 break
 
         tools.replace_in_file(cmake_file, "{}".format(cmake_project_line),
