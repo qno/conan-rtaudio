@@ -1,9 +1,9 @@
 from conans import ConanFile, CMake, AutoToolsBuildEnvironment, tools
-import re, os
+import re, os, platform
 
 class RtAudioConan(ConanFile):
     name = "RtAudio"
-    version = "master"
+    version = "5.1.0"
     license = "MIT"
     author = "Gary P. Scavone"
     url = "https://github.com/qno/conan-rtaudio"
@@ -15,25 +15,23 @@ class RtAudioConan(ConanFile):
     options = {"shared": [True, False]}
     default_options = "shared=False"
 
-    _rtaudio_pkg_name = "rtaudio"
-    _rtaudio_libname = "rtaudio"
-
-    scm = {
-         "type": "git",
-         "subfolder": _rtaudio_libname,
-         "url": "https://github.com/thestk/rtaudio",
-         "revision": "master"
-      }
+    _pkg_name = "rtaudio-5.1.0"
+    _libname = "rtaudio"
 
     def source(self):
+        url = "http://www.music.mcgill.ca/~gary/rtaudio/release/{}.tar.gz".format(self._pkg_name)
+        self.output.info("Downloading {}".format(url))
+        tools.get(url)
         # the conan_basic_setup() must be called, otherwise the compiler runtime settings won't be setup correct,
         # which then leads then to linker errors if recipe e.g. is build with /MT runtime for MS compiler
         # see https://github.com/conan-io/conan/issues/3312
-        self._patchCMakeListsFile(self._rtaudio_pkg_name)
+        self._patchCMakeListsFile(self._pkg_name)
 
     def build(self):
         if self._isVisualStudioBuild():
             cmake = CMake(self)
+            if self.settings.build_type == "Debug":
+                cmake.definitions["CMAKE_DEBUG_POSTFIX"] = "d"
             cmake.definitions["RTAUDIO_BUILD_TESTING"] = "False"
             cmake.definitions["RTAUDIO_API_DS"] = "On"
             cmake.definitions["RTAUDIO_API_ASIO"] = "On"
@@ -43,17 +41,16 @@ class RtAudioConan(ConanFile):
             else:
                 cmake.definitions["RTAUDIO_BUILD_SHARED_LIBS"] = "False"
 
-            cmake.configure(source_dir=self._rtaudio_pkg_name)
+            cmake.configure(source_dir=self._pkg_name)
             cmake.build()
         else:
-            self.run("cd {} && sh autogen.sh --no-configure && cd ..".format(self._rtaudio_pkg_name))
             autotools = AutoToolsBuildEnvironment(self)
-            autotools.configure(configure_dir=self._rtaudio_pkg_name)
+            autotools.configure(configure_dir=self._pkg_name)
             autotools.make()
             autotools.install()
 
     def package(self):
-        self.copy("RtAudio.h", dst="include", src=self._rtaudio_pkg_name)
+        self.copy("RtAudio.h", dst="include", src=self._pkg_name)
         self.copy("*.lib", dst="lib", keep_path=False)
         self.copy("*.dll", dst="lib", keep_path=False)
         self.copy("*.so", dst="lib", keep_path=False)
@@ -61,17 +58,13 @@ class RtAudioConan(ConanFile):
         self.copy("*.a", dst="lib", keep_path=False)
 
     def package_info(self):
-        release_libs = [self._rtaudio_libname]
-        debug_libs = [self._rtaudio_libname]
+        release_libs = [self._libname]
+        debug_libs = [self._libname]
 
         if self._isVisualStudioBuild():
+            debug_libs = ["{}d".format(self._libname)]
             if not self.options.shared:
-                release_libs = ["{}_static".format(self._rtaudio_libname)]
-                debug_libs = ["{}_staticd".format(self._rtaudio_libname)]
                 self.cpp_info.libs = ["dsound"]
-
-            else:
-                debug_libs = ["{}d".format(self._rtaudio_libname)]
 
         self.cpp_info.release.libs = release_libs
         self.cpp_info.debug.libs = debug_libs
@@ -86,10 +79,15 @@ class RtAudioConan(ConanFile):
         for line in open(cmake_file, "r", encoding="utf8"):
             if re.match("^PROJECT.*\\(.*\\).*", line.strip().upper()):
                 cmake_project_line = line.strip()
-                self.output.warn(F"found cmake project declaration '{cmake_project_line}'")
+                self.output.warn("found cmake project declaration '{}'".format(cmake_project_line))
                 break
 
         tools.replace_in_file(cmake_file, "{}".format(cmake_project_line),
                               '''{}
 include(${{CMAKE_BINARY_DIR}}/conanbuildinfo.cmake)
 conan_basic_setup()'''.format(cmake_project_line))
+
+        if platform.platform().startswith("Windows-2012"):
+            self.output.warn("set minimum required CMake version back to 3.7 on {} build server".format(platform.platform()))
+            tools.replace_in_file(cmake_file, "cmake_minimum_required(VERSION 3.10 FATAL_ERROR)",
+                "cmake_minimum_required(VERSION 3.7 FATAL_ERROR)")
