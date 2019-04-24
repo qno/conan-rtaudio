@@ -30,6 +30,8 @@ class RtAudioConan(ConanFile):
     def build(self):
         if self._isVisualStudioBuild():
             cmake = CMake(self)
+            if self.settings.build_type == "Debug":
+                cmake.definitions["CMAKE_DEBUG_POSTFIX"] = "d"
             cmake.definitions["RTAUDIO_BUILD_TESTING"] = "False"
             cmake.definitions["RTAUDIO_API_DS"] = "On"
             cmake.definitions["RTAUDIO_API_ASIO"] = "On"
