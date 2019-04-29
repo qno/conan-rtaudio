@@ -110,9 +110,6 @@ class RtAudioConan(ConanFile):
 
         if self.settings.os == "Macos":
             self.cpp_info.libs = ["pthread"]
-            pkg_config = PkgConfig("jack")
-            for lib in pkg_config.libs_only_l:
-                self.cpp_info.libs.append(lib[2:])
 
             self.cpp_info.exelinkflags.append(" -framework CoreAudio -framework CoreFoundation")
 
