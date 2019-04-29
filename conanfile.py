@@ -101,7 +101,7 @@ class RtAudioConan(ConanFile):
 
         # Note: this must be correctly refined with options added for selecting
         # --with-jack --with-alsa --with-pulse --with-oss --with-core --with-asio --with-ds --with-wasapi
-        if not self.settings.os == "Linux":
+        if self.settings.os == "Linux":
             self.cpp_info.libs = ["asound", "pthread", "pulse-simple", "pulse"]
 
             pkg_config = PkgConfig("jack")
