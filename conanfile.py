@@ -1,5 +1,4 @@
 from conans import ConanFile, CMake, tools
-from conans.client.tools.pkg_config import PkgConfig
 import re, os, platform
 
 class RtAudioConan(ConanFile):
@@ -101,21 +100,20 @@ class RtAudioConan(ConanFile):
         # Note: this must be correctly refined with options added for selecting
         # --with-jack --with-alsa --with-pulse --with-oss --with-core --with-asio --with-ds --with-wasapi
         if self.settings.os == "Linux":
-            self.cpp_info.libs = ["asound", "pthread", "pulse-simple", "pulse"]
-
-            pkg_config = PkgConfig("jack")
-            for lib in pkg_config.libs_only_l:
-                self.cpp_info.libs.append(lib[2:])
+            libs = ["pthread", "asound", "pulse-simple", "pulse", "jack"]
 
         if self.settings.os == "Macos":
-            self.cpp_info.libs = ["pthread"]
+            libs = ["pthread"]
 
             self.cpp_info.exelinkflags.append(" -framework CoreAudio -framework CoreFoundation")
 
         if self._isVisualStudioBuild():
             debug_libs = ["{}d".format(self._libname)]
             if not self.options.shared:
-                self.cpp_info.libs = ["dsound"]
+                libs = ["dsound"]
+
+        release_libs.extend(libs)
+        debug_libs.extend(libs)
 
         self.cpp_info.release.libs = release_libs
         self.cpp_info.debug.libs = debug_libs
