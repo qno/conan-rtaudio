@@ -66,39 +66,31 @@ class RtAudioConan(ConanFile):
         self._patchCMakeListsFile(self._pkg_name)
 
     def build(self):
+        cmake = CMake(self)
+
         if self._isVisualStudioBuild():
-            cmake = CMake(self)
             if self.settings.build_type == "Debug":
                 cmake.definitions["CMAKE_DEBUG_POSTFIX"] = "d"
             cmake.definitions["RTAUDIO_BUILD_TESTING"] = "False"
             cmake.definitions["RTAUDIO_API_DS"] = "On"
             cmake.definitions["RTAUDIO_API_ASIO"] = "On"
             cmake.definitions["RTAUDIO_API_WASAPI"] = "On"
-            if self.options.shared:
-                cmake.definitions["RTAUDIO_BUILD_STATIC_LIBS"] = "False"
-            else:
-                cmake.definitions["RTAUDIO_BUILD_SHARED_LIBS"] = "False"
 
-            cmake.configure(source_dir=self._pkg_name)
-            cmake.build()
+        if self.options.shared:
+            cmake.definitions["RTAUDIO_BUILD_STATIC_LIBS"] = "False"
         else:
-            autotools = AutoToolsBuildEnvironment(self)
-            autotools.configure(configure_dir=self._pkg_name)
-            autotools.make()
-            autotools.install()
+            cmake.definitions["RTAUDIO_BUILD_SHARED_LIBS"] = "False"
+
+        cmake.configure(source_dir=self._pkg_name)
+        cmake.build()
 
     def package(self):
         self.copy("RtAudio.h", dst="include", src=self._pkg_name)
         self.copy("*.lib", dst="lib", keep_path=False)
         self.copy("*.dll", dst="lib", keep_path=False)
-
-        # due to a linker error on Linux if tests are built with autotools and --enable-static
-        # the autotools build must build shared and static, so here the appropriate lib is selected
-        if self.options.shared:
-            self.copy("*.so", dst="lib", keep_path=False)
-            self.copy("*.dylib", dst="lib", keep_path=False)
-        else:
-            self.copy("*.a", dst="lib", keep_path=False)
+        self.copy("*.so", dst="lib", keep_path=False)
+        self.copy("*.dylib", dst="lib", keep_path=False)
+        self.copy("*.a", dst="lib", keep_path=False)
 
     def package_info(self):
         release_libs = [self._libname]
