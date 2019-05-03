@@ -82,11 +82,8 @@ class RtAudioConan(ConanFile):
             cmake.configure(source_dir=self._pkg_name)
             cmake.build()
         else:
-            config_args = ["--enable-shared=no", "--enable-static=yes"]
-            if self.options.shared:
-                config_args = ["--enable-shared=yes", "--enable-static=no"]
             autotools = AutoToolsBuildEnvironment(self)
-            autotools.configure(configure_dir=self._pkg_name, args=config_args)
+            autotools.configure(configure_dir=self._pkg_name)
             autotools.make()
             autotools.install()
 
@@ -94,9 +91,14 @@ class RtAudioConan(ConanFile):
         self.copy("RtAudio.h", dst="include", src=self._pkg_name)
         self.copy("*.lib", dst="lib", keep_path=False)
         self.copy("*.dll", dst="lib", keep_path=False)
-        self.copy("*.so", dst="lib", keep_path=False)
-        self.copy("*.dylib", dst="lib", keep_path=False)
-        self.copy("*.a", dst="lib", keep_path=False)
+
+        # due to a linker error on Linux if tests are built with autotools and --enable-static
+        # the autotools build must build shared and static, so here the appropriate lib is selected
+        if self.options.shared:
+            self.copy("*.so", dst="lib", keep_path=False)
+            self.copy("*.dylib", dst="lib", keep_path=False)
+        else:
+            self.copy("*.a", dst="lib", keep_path=False)
 
     def package_info(self):
         release_libs = [self._libname]
