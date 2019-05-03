@@ -81,6 +81,8 @@ class RtAudioConan(ConanFile):
         else:
             cmake.definitions["RTAUDIO_BUILD_SHARED_LIBS"] = "False"
 
+        cmake.definitions["RTAUDIO_BUILD_TESTING"] = "False"
+
         cmake.configure(source_dir=self._pkg_name)
         cmake.build()
 
