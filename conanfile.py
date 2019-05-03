@@ -1,4 +1,4 @@
-from conans import ConanFile, CMake, AutoToolsBuildEnvironment, tools
+from conans import ConanFile, CMake, tools
 from conans.client.tools.pkg_config import PkgConfig
 import re, os, platform
 
