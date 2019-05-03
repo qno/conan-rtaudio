@@ -96,6 +96,7 @@ class RtAudioConan(ConanFile):
     def package_info(self):
         release_libs = [self._libname]
         debug_libs = [self._libname]
+        libs = []
 
         # Note: this must be correctly refined with options added for selecting
         # --with-jack --with-alsa --with-pulse --with-oss --with-core --with-asio --with-ds --with-wasapi
