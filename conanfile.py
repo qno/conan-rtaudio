@@ -82,8 +82,11 @@ class RtAudioConan(ConanFile):
             cmake.configure(source_dir=self._pkg_name)
             cmake.build()
         else:
+            config_args = ["--enable-shared=no", "--enable-static=yes"]
+            if self.options.shared:
+                config_args = ["--enable-shared=yes", "--enable-static=no"]
             autotools = AutoToolsBuildEnvironment(self)
-            autotools.configure(configure_dir=self._pkg_name)
+            autotools.configure(configure_dir=self._pkg_name, args=config_args)
             autotools.make()
             autotools.install()
 
