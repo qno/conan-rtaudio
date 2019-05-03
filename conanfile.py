@@ -14,7 +14,7 @@ class RtAudioConan(ConanFile):
     generators = "cmake"
 
     options = {"shared": [True, False]}
-    default_options = "shared=False"
+    default_options = {"shared": False}
 
     _pkg_name = "rtaudio-5.1.0"
     _libname = "rtaudio"
