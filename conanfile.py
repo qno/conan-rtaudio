@@ -1,5 +1,4 @@
-from conans import ConanFile, CMake, AutoToolsBuildEnvironment, tools
-from conans.client.tools.pkg_config import PkgConfig
+from conans import ConanFile, CMake, tools
 import re, os, platform
 
 class RtAudioConan(ConanFile):
@@ -66,57 +65,56 @@ class RtAudioConan(ConanFile):
         self._patchCMakeListsFile(self._pkg_name)
 
     def build(self):
+        cmake = CMake(self)
+
         if self._isVisualStudioBuild():
-            cmake = CMake(self)
             if self.settings.build_type == "Debug":
                 cmake.definitions["CMAKE_DEBUG_POSTFIX"] = "d"
             cmake.definitions["RTAUDIO_BUILD_TESTING"] = "False"
             cmake.definitions["RTAUDIO_API_DS"] = "On"
             cmake.definitions["RTAUDIO_API_ASIO"] = "On"
             cmake.definitions["RTAUDIO_API_WASAPI"] = "On"
-            if self.options.shared:
-                cmake.definitions["RTAUDIO_BUILD_STATIC_LIBS"] = "False"
-            else:
-                cmake.definitions["RTAUDIO_BUILD_SHARED_LIBS"] = "False"
 
-            cmake.configure(source_dir=self._pkg_name)
-            cmake.build()
+        if self.options.shared:
+            cmake.definitions["RTAUDIO_BUILD_STATIC_LIBS"] = "False"
         else:
-            autotools = AutoToolsBuildEnvironment(self)
-            autotools.configure(configure_dir=self._pkg_name)
-            autotools.make()
-            autotools.install()
+            cmake.definitions["RTAUDIO_BUILD_SHARED_LIBS"] = "False"
+
+        cmake.definitions["RTAUDIO_BUILD_TESTING"] = "False"
+
+        cmake.configure(source_dir=self._pkg_name)
+        cmake.build()
 
     def package(self):
         self.copy("RtAudio.h", dst="include", src=self._pkg_name)
         self.copy("*.lib", dst="lib", keep_path=False)
         self.copy("*.dll", dst="lib", keep_path=False)
-        self.copy("*.so", dst="lib", keep_path=False)
+        self.copy("*.so*", dst="lib", keep_path=False)
         self.copy("*.dylib", dst="lib", keep_path=False)
         self.copy("*.a", dst="lib", keep_path=False)
 
     def package_info(self):
         release_libs = [self._libname]
         debug_libs = [self._libname]
+        libs = []
 
         # Note: this must be correctly refined with options added for selecting
         # --with-jack --with-alsa --with-pulse --with-oss --with-core --with-asio --with-ds --with-wasapi
         if self.settings.os == "Linux":
-            self.cpp_info.libs = ["asound", "pthread", "pulse-simple", "pulse"]
-
-            pkg_config = PkgConfig("jack")
-            for lib in pkg_config.libs_only_l:
-                self.cpp_info.libs.append(lib[2:])
+            libs = ["pthread", "asound", "pulse-simple", "pulse", "jack"]
 
         if self.settings.os == "Macos":
-            self.cpp_info.libs = ["pthread"]
+            libs = ["pthread"]
 
             self.cpp_info.exelinkflags.append(" -framework CoreAudio -framework CoreFoundation")
 
         if self._isVisualStudioBuild():
             debug_libs = ["{}d".format(self._libname)]
             if not self.options.shared:
-                self.cpp_info.libs = ["dsound"]
+                libs = ["dsound"]
+
+        release_libs.extend(libs)
+        debug_libs.extend(libs)
 
         self.cpp_info.release.libs = release_libs
         self.cpp_info.debug.libs = debug_libs
