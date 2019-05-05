@@ -6,14 +6,21 @@ class RtAudioConan(ConanFile):
     version = "5.1.0"
     license = "MIT"
     author = "Gary P. Scavone"
+    homepage = "https://github.com/thestk/rtaudio"
     url = "https://github.com/qno/conan-rtaudio"
     description = "A set of C++ classes that provide a common API for realtime audio input/output across Linux (native ALSA, JACK, PulseAudio and OSS), Macintosh OS X (CoreAudio and JACK), and Windows (DirectSound, ASIO, and WASAPI) operating systems."
 
     settings = "os", "compiler", "build_type", "arch"
     generators = "cmake"
 
-    options = {"shared": [True, False]}
-    default_options = {"shared": False}
+    options = {
+        "shared": [True, False],
+        "fPIC": [True, False]
+        }
+    default_options = {
+        "shared": False,
+         "fPIC": True
+         }
 
     _pkg_name = "rtaudio-5.1.0"
     _libname = "rtaudio"
@@ -63,6 +70,10 @@ class RtAudioConan(ConanFile):
         # which then leads then to linker errors if recipe e.g. is build with /MT runtime for MS compiler
         # see https://github.com/conan-io/conan/issues/3312
         self._patchCMakeListsFile(self._pkg_name)
+
+    def configure(self):
+        if self._isVisualStudioBuild():
+            del self.options.fPIC
 
     def build(self):
         cmake = CMake(self)
