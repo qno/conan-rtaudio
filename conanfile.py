@@ -119,10 +119,12 @@ class RtAudioConan(ConanFile):
 
             self.cpp_info.exelinkflags.append(" -framework CoreAudio -framework CoreFoundation")
 
-        if self._isVisualStudioBuild():
+        if self._isVisualStudioBuild() or self._isMinGWBuild():
             debug_libs = ["{}d".format(self._libname)]
-            if not self.options.shared:
-                libs = ["dsound"]
+            libs = ["dsound"]
+
+        if self._isMinGWBuild():
+            libs.extend(["ole32", "winmm", "ksuser", "mfplat", "mfuuid", "wmcodecdspuuid"])
 
         release_libs.extend(libs)
         debug_libs.extend(libs)
@@ -132,6 +134,9 @@ class RtAudioConan(ConanFile):
 
     def _isVisualStudioBuild(self):
         return self.settings.os == "Windows" and self.settings.compiler == "Visual Studio"
+
+    def _isMinGWBuild(self):
+        return self.settings.os == "Windows" and self.settings.compiler == "gcc"
 
     def _patchCMakeListsFile(self, src_dir):
         cmake_project_line = ""
