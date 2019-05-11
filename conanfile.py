@@ -78,9 +78,11 @@ class RtAudioConan(ConanFile):
     def build(self):
         cmake = CMake(self)
 
-        if self._isVisualStudioBuild():
+        if self._isVisualStudioBuild() or self._isMinGWBuild():
             if self.settings.build_type == "Debug":
                 cmake.definitions["CMAKE_DEBUG_POSTFIX"] = "d"
+
+        if self._isVisualStudioBuild():
             cmake.definitions["RTAUDIO_BUILD_TESTING"] = "False"
             cmake.definitions["RTAUDIO_API_DS"] = "On"
             cmake.definitions["RTAUDIO_API_ASIO"] = "On"
@@ -152,6 +154,10 @@ class RtAudioConan(ConanFile):
                               '''{}
 include(${{CMAKE_BINARY_DIR}}/conanbuildinfo.cmake)
 conan_basic_setup()'''.format(cmake_project_line))
+
+        self.output.warn("remove -Werror flag for Debug builds with gcc, otherwise CI builds will fail")
+        tools.replace_in_file(cmake_file, "set(CMAKE_CXX_FLAGS \"${CMAKE_CXX_FLAGS} -Werror\")",
+            "set(CMAKE_CXX_FLAGS \"${CMAKE_CXX_FLAGS}\")")
 
         if platform.platform().startswith("Windows-2012"):
             self.output.warn("set minimum required CMake version back to 3.7 on {} build server".format(platform.platform()))
